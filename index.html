@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>랜덤 계산기</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container" style="margin-top: 50px;">
+    <form>
+      <div class="form-group row">
+        <label for="salse_price" class="col-sm-2 col-form-label">매출액</label>
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="salse_price" value="16000000">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="rent_price" class="col-sm-2 col-form-label">임차료</label>
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="rent_price" value="0">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="donation_price" class="col-sm-2 col-form-label">기부금</label>
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="donation_price" value="200000">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="card_price" class="col-sm-2 col-form-label">신용카드사용액</label>
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="card_price" value="200000000">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label for="insurance_price" class="col-sm-2 col-form-label">보험료</label>
+        <div class="col-sm-10">
+          <input type="number" class="form-control" id="insurance_price" value="1200000">
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="calc();">계산</button>
+    </form>
+  </div>
+  <div id="result" class="container" style="margin-top: 50px;">
+
+
+  </div>
+  <script>
+    function calc() {
+      const vvvv = getInputValuse();
+      let card_distribution_price = vvvv.card_price * 0.7;
+      const expense_rate = getRndInteger(1500, 1700) / 10000;
+
+      for (let index = 0 ; index < 100 ;index++) {
+        let rates;
+
+        for (let index2 = 0 ; index2 < 100 ;index2++) {
+          rates = getRates();
+          if (rates.extra_rate >= 0.15 || rates.extra_rate <= 0.38) {
+            break;
+          }
+        }
+        log('rate: ' + JSON.stringify(rates));
+
+        const result = {
+          'consumable': card_distribution_price * rates.consumable_rate,
+          'ent': card_distribution_price * rates.ent_rate,
+          'commission_fee': card_distribution_price * rates.commission_fee_rate,
+          'transportation': card_distribution_price * rates.transportation_rate,
+          'extra': card_distribution_price * rates.extra_rate,
+          'rates': rates,
+        };
+
+        const expense1 = vvvv.salse_price - (vvvv.salse_price * expense_rate);
+        const expense2 = vvvv.donation_price + vvvv.insurance_price + vvvv.rent_price + result.commission_fee + result.consumable + result.ent + result.extra + result.transportation;
+
+        if (expense2 > expense1) {
+          card_distribution_price = expense1 - (vvvv.donation_price + vvvv.insurance_price + vvvv.rent_price);
+          continue;
+        }
+
+        log('result: ' + JSON.stringify(result));
+        print_result(result);
+        break;
+      }
+    }
+
+    function print_result(result) {
+      document.getElementById('result').innerHTML = ' <table class="table table-striped">\n' +
+        '  <thead>\n' +
+        '    <tr>\n' +
+        '      <th scope="col">항목</th>\n' +
+        '      <th scope="col">값</th>\n' +
+        '      <th scope="col">비율</th>\n' +
+        '    </tr>\n' +
+        '  </thead>\n' +
+        '  <tbody>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">소모품비</th>\n' +
+        '      <td>' + addComma(readableNumber(result.consumable)) + '</td>\n' +
+        '      <td>' + readableNumber(result.rates.consumable_rate * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">접대비</th>\n' +
+        '      <td>' + addComma(readableNumber(result.ent)) + '</td>\n' +
+        '      <td>' + readableNumber(result.rates.ent_rate * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">지급수수료</th>\n' +
+        '      <td>' + addComma(readableNumber(result.commission_fee)) + '</td>\n' +
+        '      <td>' + readableNumber(result.rates.commission_fee_rate * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">여비교통비</th>\n' +
+        '      <td>' + addComma(readableNumber(result.transportation)) + '</td>\n' +
+        '      <td>' + readableNumber(result.rates.transportation_rate * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">기타</th>\n' +
+        '      <td>' + addComma(readableNumber(result.extra)) + '</td>\n' +
+        '      <td>' + readableNumber(result.rates.extra_rate * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '    <tr>\n' +
+        '      <th scope="row">합</th>\n' +
+        '      <td>' + addComma(readableNumber(result.consumable + result.ent + result.commission_fee + result.transportation + result.extra)) + '</td>\n' +
+        '      <td>' + readableNumber((result.rates.consumable_rate + result.rates.ent_rate + result.rates.commission_fee_rate + result.rates.transportation_rate + result.rates.extra_rate) * 100) + '%</td>\n' +
+        '    </tr>\n' +
+        '  </tbody>\n' +
+        '</table>';
+    }
+
+    function readableNumber(number) {
+      return Math.round(number);
+    }
+
+    function addComma(num) {
+      const regexp = /\B(?=(\d{3})+(?!\d))/g;
+      return num.toString().replace(regexp, ',');
+    }
+
+    function getRates() {
+      const rates = {
+        'consumable_rate': getRndInteger(500, 600) / 1000,
+        'ent_rate': getRndInteger(50, 100) / 1000,
+        'commission_fee_rate': getRndInteger(20, 50) / 1000,
+        'transportation_rate': getRndInteger(50, 100) / 1000,
+      };
+      rates.extra_rate = 1 - (rates.commission_fee_rate + rates.consumable_rate + rates.ent_rate + rates.transportation_rate);
+      return rates
+    }
+
+    function getRndInteger(min, max) {
+      return Math.floor(Math.random() * (max - min) ) + min;
+    }
+
+    function log(message) {
+      console.log(message)
+    }
+
+    function getInputValuse() {
+      return {
+        'salse_price': parseInt(document.getElementById('salse_price').value, 10),
+        'rent_price': parseInt(document.getElementById('rent_price').value, 10),
+        'donation_price': parseInt(document.getElementById('donation_price').value, 10),
+        'card_price': parseInt(document.getElementById('card_price').value, 10),
+        'insurance_price': parseInt(document.getElementById('insurance_price').value, 10),
+      }
+
+    }
+  </script>
+
+</table>
+</body>
+</html>
